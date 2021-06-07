@@ -12,13 +12,20 @@
 
 
 #include <vector>
+#include <complex>
+#include <typeinfo>
+#include <cmath>
+#include <map>
 #include <ostream>
 #include <iostream>
 #include <opencv2/opencv.hpp>
 using namespace std;
 using namespace cv;
 template<typename T>
+class Vector;
+template<typename T>
 class Matrix {
+    friend class Vector<T>;
 private:
     vector<vector<T>> vec;
 public:
@@ -66,6 +73,119 @@ public:
         return output;
     }
 
+    Matrix operator+(Matrix<T> &right) {
+        Matrix<T> m1(vec.size(), vec[0].size());
+        if (vec.size() != right.vec.size() && vec[0].size() != right.vec[0].size()) {
+            std::cout << "The dimension is wrong!" << endl;
+            return m1;
+        }
+
+        for (int i = 0; i < vec.size(); i++) {
+            for (int j = 0; j < vec[0].size(); j++) {
+                m1.setVecValue(i, j, vec[i][j] + right.vec[i][j]);
+            }
+        }
+        return m1;
+    }//add
+
+    Matrix operator-(Matrix<T> &right) {
+        Matrix<T> m1(vec.size(), vec[0].size());
+        if (vec.size() != right.vec.size() && vec[0].size() != right.vec[0].size()) {
+            std::cout << "The dimension is wrong!" << endl;
+            return m1;
+        }
+        for (int i = 0; i < vec.size(); i++) {
+            for (int j = 0; j < vec[0].size(); j++) {
+                m1.setVecValue(i, j, vec[i][j] - right.vec[i][j]);
+            }
+        }
+        return m1;
+    }//sub
+
+    Matrix operator*(int num) {
+        Matrix<T> m1(vec.size(), vec[0].size());
+        for (int i = 0; i < vec.size(); i++) {
+            for (int j = 0; j < vec[0].size(); j++) {
+                m1.setVecValue(i, j, this->getvecvalue(i, j) * num);
+            }
+        }
+        return m1;
+    }//scalar multiplication
+
+    Matrix operator/(int num) {
+        Matrix<T> m1(vec.size(), vec[0].size());
+        for (int i = 0; i < vec.size(); i++) {
+            for (int j = 0; j < vec[0].size(); j++) {
+                m1.setVecValue(i, j, this->getvecvalue(i, j) / num);
+            }
+        }
+        return m1;
+    }//scalar division
+
+    Matrix Transpose() {
+        Matrix<T> m1(vec[0].size(), vec.size());
+        for (int i = 0; i < vec[0].size(); i++) {
+            for (int j = 0; j < vec.size(); j++) {
+                m1.setVecValue(i, j, this->getvecvalue(j, i));
+            }
+        }
+        return m1;
+    }//transpose
+
+    Matrix Conjugation() {
+        Matrix<T> m1(vec.size(), vec[0].size());
+        for (int i = 0; i < vec.size(); i++) {
+            for (int j = 0; j < vec[0].size(); j++) {
+                complex<T> m2;
+                m2.real(real(this->getvecvalue(i, j)));
+                m2.imag(imag(this->getvecvalue(i, j)) * -1);
+                m1.setVecValue(i, j, m2);
+            }
+        }
+        return m1;
+    }//Conjugation
+
+    Matrix Element_Wise(const Matrix<T> &right) {
+        if (vec.size() != right.vec.size() || vec[0].size() != right.vec[0].size()) {
+            cout << "the dimension is wrong!" << endl;
+        }
+        Matrix<T> m1(vec.size(), vec[0].size());
+        for (int i = 0; i < vec.size(); i++) {
+            for (int j = 0; j < vec[0].size(); j++) {
+                m1.setVecValue(i, j, vec[i][j] * right.vec[i][j]);
+            }
+        }
+        return m1;
+    }//Element_Wise
+
+    Matrix operator*(Matrix<T> &right) {
+        if (vec[0].size() != right.vec.size()) {
+            std::cout << "The dimension is wrong!" << endl;
+            return this;
+        }
+        Matrix<T> m1(this->vec.size(), right.vec[0].size());
+        for (int i = 0; i < vec.size(); i++) {
+            for (int j = 0; j < right.vec[0].size(); j++) {
+                for (int k = 0; k < vec[0].size(); k++) {
+                    m1.setVecValue(i, j, this->getvecvalue(i, k) * right.getvecvalue(k, j));
+                }
+            }
+        }
+        return m1;
+    }//matrix-matrix multiplication
+
+    Matrix operator*(Vector<T> &right) {
+        if (this->vec[0].size() != right.dimension) {
+            cout << "The dimension is wrong!" << endl;
+            return 0;
+        }
+        Matrix<T> m1(right.dimension, 1);
+        for (int i = 0; i < right.dimension; i++) {
+            m1 = m1 + this->pickColvalue(this, i) * right[i];
+        }
+        return m1;
+    }//matrix-vector multiplication
+
 
 
 
@@ -82,6 +202,111 @@ public:
 
     inline int cols() const;
 };
+
+template<typename T>
+class Vector {
+private:
+    vector<vector<T>> value;
+    int dimension{}; //向量的维数
+public:
+    Vector()= default;;
+    Vector(Vector& source);
+    void setValue(int i,T newvalue);
+    T getValue(int i);
+    void setDimension(int newDimension);
+    int getDimension();
+
+    Vector pickvalue(Matrix<T> & m, int col){
+        Vector<T> m1;
+        m1.dimension = m.vec[0].size();
+        for(int i = 0 ; i < m1.dimension ; i++){
+            m1[i] = m.getvecvalue(col , i);
+        }
+        return m1;
+    }
+    Vector operator +(Vector& right)
+    {
+        if(dimension != right.dimension)
+        {
+            std::cout << "The dimension is wrong!" << endl;
+            return this;
+        }
+        for(int i = 0 ; i < dimension ; i++){
+            this->setValue(i,this->getValue(i) + right.getValue(i));
+        }
+        return this;
+    }
+    Vector operator -(Vector& right)
+    {
+        if(dimension != right.dimension)
+        {
+            std::cout << "The dimension is wrong!" << endl;
+            return this;
+        }
+        for(int i = 0 ; i < dimension ; i++){
+            this->setValue(i,this->getValue(i) - right.getValue(i));
+        }
+        return this;
+    }
+
+    T operator *(Vector& right)
+    {
+        T ans;
+        for(int i = 0 ; i < dimension ; i++){
+            ans += this->getValue(i) * right.getValue(i);
+        }
+        return ans;
+    }//dot product
+
+    Matrix<T> operator *(Matrix<T>& right)
+    {
+        if(dimension != right.vec.size()){
+            cout << "The dimension is wrong!" << endl;
+            return 0;
+        }
+        Matrix<T> m1(1 , right.dimension);
+        for(int i = 0 ; i < right.dimension ; i++){
+            m1 = m1 + this->pickRowvalue(this , i) * right[i];
+        }
+        return m1;
+    }//matrix-vector multiplication
+
+    friend std::ostream &operator<<(std::ostream &output, const Vector<T>& v) {
+        for (const auto &i : v) {
+            output << i << " ";
+        }
+        output << endl;
+        return output;
+    }
+};
+
+template<typename T>
+void Vector<T>::setValue(int i, T newvalue) {
+    value[i] = newvalue;
+}
+
+template<typename T>
+Vector<T>::Vector(Vector &source) {
+    dimension = source.dimension;
+    for(int i = 0 ; i < dimension ; i++){
+        value[i] = source.value[i];
+    }
+}
+
+template<typename T>
+T Vector<T>::getValue(int i) {
+    return value[i];
+}
+
+template<typename T>
+void Vector<T>::setDimension(int newDimension) {
+    dimension = newDimension;
+}
+
+template<typename T>
+int Vector<T>::getDimension() {
+    return dimension;
+}
 
 template<typename T>
 int Matrix<T>::chakan(int rows, int cols) {
