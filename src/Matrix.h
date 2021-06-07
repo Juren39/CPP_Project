@@ -376,7 +376,198 @@ public:
         return detVal;
     }//determinant
 
+    vector<vector<T>>  getAStart(vector<vector<T>> arcs)
+    {
+        vector<vector<T>> ans = vector<vector<T>>(vec.size() , vector<T>(vec.size()));
+        if(vec.size() == 1)
+        {
+            ans[0][0] = 1;
+            return ans;
+        }
+        int i,j,k,t;
+        vector<vector<T>> temp = vector<vector<T>>(vec.size() , vector<T>(vec.size()));
+        for(i = 0;i < vec.size(); i++)
+        {
+            for(j = 0;j < vec.size();j++)
+            {
+                for(k=0; k < vec.size() - 1;k++)
+                {
+                    for(t=0;t < vec.size() - 1;t++)
+                    {
+                        temp[k][t] = arcs[k>=i?k+1:k][t>=j?t+1:t];
+                    }
+                }
+                ans[j][i]  =  determinant(temp,vec.size() - 1);  //此处顺便进行了转置
+                if(( i + j ) % 2 == 1)
+                {
+                    ans[j][i] = - ans[j][i];
+                }
+            }
+        }
+        return ans;
+    }
 
+    //得到给定矩阵src的逆矩阵保存到des中。
+    bool GetMatrixInverse(vector<vector<T>>&des)
+    {
+        des = vector<vector<T >>(vec.size()  , vector<T>(vec.size()));
+        vector<vector<T>> t = vector<vector<T >>(vec.size()  , vector<T>(vec.size()));
+        int flag = determinant(vec , vec.size());
+
+        if(0==flag)
+        {
+            cout<< "原矩阵行列式为0，无法求逆。请重新运行" <<endl;
+            return false;//如果算出矩阵的行列式为0，则不往下进行
+        }
+        else
+        {
+            t = getAStart(vec,vec.size());
+            for(int i = 0;i < vec.size();i++)
+            {
+                for(int j = 0;j < vec.size();j++)
+                {
+                    des[i][j]=t[i][j]/flag;
+                }
+
+            }
+        }
+        return true;
+    }//inverse
+
+    T min_all() {
+        T min = INT_MAX;
+        for (int i = 0; i < vec.size(); i++) {
+            for (int j = 0; j < vec[0].size(); j++) {
+                if (vec[i][j] < min) {
+                    min = vec[i][j];
+                }
+            }
+        }
+        return min;
+    }
+
+    T min_row(int row) {
+        T min = INT_MAX;
+        for (int j = 0; j < vec[0].size(); j++) {
+            if (vec[row][j] < min) {
+                min = vec[row][j];
+            }
+        }
+
+        return min;
+    }
+
+    T min_col(int col) {
+        T min = INT_MAX;
+        for (int j = 0; j < vec[0].size(); j++) {
+            if (vec[j][col] < min) {
+                min = vec[j][col];
+            }
+        }
+
+        return min;
+    }
+
+    T max_all() {
+        T max = INT_MIN;
+        for (int i = 0; i < vec.size(); i++) {
+            for (int j = 0; j < vec[0].size(); j++) {
+                if (vec[i][j] > max) {
+                    max = vec[i][j];
+                }
+            }
+        }
+        return max;
+    }
+
+    T max_row(int row) {
+        T max = INT_MIN;
+        for (int j = 0; j < vec[0].size(); j++) {
+            if (vec[row][j] > max) {
+                max = vec[row][j];
+            }
+        }
+
+        return max;
+    }
+
+    T max_col(int col) {
+        T max = INT_MIN;
+        for (int j = 0; j < vec[0].size(); j++) {
+            if (vec[j][col] > max) {
+                max = vec[j][col];
+            }
+        }
+
+        return max;
+    }
+
+    T sum_all() {
+        T sum = 0;
+        for (int i = 0; i < vec.size(); i++) {
+            for (int j = 0; j < vec[0].size(); j++) {
+                sum += vec[i][j];
+            }
+        }
+        return sum;
+    }
+
+    T sum_row(int row) {
+        T sum = 0;
+        for (int j = 0; j < vec[row].size(); j++) {
+            sum += vec[row][j];
+        }
+
+        return sum;
+    }
+
+    T sum_col(int col) {
+        T sum = 0;
+        for (int j = 0; j < vec.size(); j++) {
+            sum += vec[j][col];
+        }
+
+        return sum;
+    }
+
+    T avg_all() {
+        T sum = 0;
+        int he;
+        for (int i = 0; i < vec.size(); i++) {
+            for (int j = 0; j < vec[0].size(); j++) {
+                sum += vec[i][j];
+                he++;
+            }
+        }
+        T avg = sum / he;
+        return avg;
+    }
+
+    T avg_row(int row) {
+        T sum = 0;
+        int he;
+        for (int j = 0; j < vec[row].size(); j++) {
+            sum += vec[row][j];
+            he++;
+        }
+
+        T avg = sum / he;
+        return avg;
+    }
+
+    T avg_col(int col) {
+        T sum = 0;
+        int he;
+        for (int j = 0; j < vec.size(); j++) {
+            sum += vec[j][col];
+            he++;
+        }
+
+        T avg = sum / he;
+        return avg;
+    }
+
+    
 
 
     static Matrix<T> reshape(Matrix<T> m, int r, int c);
