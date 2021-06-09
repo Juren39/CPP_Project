@@ -567,7 +567,7 @@ public:
         return avg;
     }
 
-    
+
 
 
     static Matrix<T> reshape(Matrix<T> m, int r, int c);
